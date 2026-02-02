@@ -2,77 +2,151 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PWA 驗證測試</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/1565c0/ffffff.png?text=iOS">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1565c0">
+
     <style>
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             text-align: center;
             padding: 20px;
-            /* V1 版本：背景是淺藍色 */
-            /* V2 版本：背景是淺綠 */
-            background-color: #e8f5e9; 
+            /* 請依照您現在的版本修改顏色，確認有變色 */
+            background-color: #e8f5e9; /* 1.0.0.1 應該是綠色 */
             transition: background-color 0.5s;
         }
         .card {
             background: white;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             max-width: 400px;
             margin: 0 auto;
         }
-        h1 { color: #2e7d32;; } /* 藍色文字 */
+        h1 { color: #2e7d32; margin-bottom: 5px; }
         .version {
-            font-size: 1.2em;
-            font-weight: bold;
+            font-size: 1.5em;
+            font-weight: 800;
             color: #d32f2f;
             border: 2px dashed #d32f2f;
-            padding: 10px;
-            margin: 20px 0;
+            padding: 10px 20px;
+            margin: 15px 0;
             display: inline-block;
+            border-radius: 8px;
+        }
+        /* 新增按鈕樣式 */
+        .btn {
+            background: #0277bd;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 50px;
+            margin: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn:active { transform: scale(0.95); }
+        #debug-log {
+            text-align: left;
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: scroll;
         }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>PWA 更新測試</h1>
-        <p>當前版本狀態：</p>
         
         <div class="version">Version: 1.0.0.1</div>
         
-        <p>請將此頁面加入主畫面 (Install)</p>
-        <p id="status">Service Worker 載入中...</p>
+        <p>iOS PWA 專用測試介面</p>
+        
+        <button class="btn" onclick="checkUpdate()">檢查更新 (Update)</button>
+        <button class="btn" onclick="window.location.reload()">強制重整 (Reload)</button>
+
+        <div id="status">SW 狀態: 偵測中...</div>
     </div>
 
+    <div id="debug-log">Log 初始化...</div>
+
     <script>
-        // 註冊 Service Worker
+        // 簡單的 Log 函式，把訊息印在畫面上方便手機看
+        function log(msg) {
+            const box = document.getElementById('debug-log');
+            const time = new Date().toLocaleTimeString();
+            box.innerHTML = `[${time}] ${msg}<br>` + box.innerHTML;
+            console.log(msg);
+        }
+
+        let newWorker;
+
+        function checkUpdate() {
+            log('手動檢查更新中...');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.update().then(() => {
+                        log('檢查完成 (reg.update)');
+                    });
+                });
+            } else {
+                log('不支援 Service Worker');
+            }
+        }
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(reg => {
-                    document.getElementById('status').innerText = '✅ PWA 功能已就緒 (SW Registered)';
-                    console.log('SW registered:', reg);
-                    
-                    // 偵測是否有新版本在等待
-                    if(reg.waiting) {
-                        // 這裡通常會跳出提示請使用者重新整理，我們簡化測試直接 log
-                        console.log('新版本已下載，等待啟動');
-                    }
-                })
-                .catch(err => {
-                    document.getElementById('status').innerText = '❌ PWA 註冊失敗';
-                    console.error('SW error:', err);
-                });
+                    log('✅ SW 註冊成功');
+                    document.getElementById('status').innerText = '✅ PWA 運作中';
 
-            // 監聽 Controller 改變 (代表更新完成了)
+                    // 1. 如果發現正在安裝新版
+                    if (reg.installing) {
+                        log('發現安裝中版本 (Installing)');
+                    }
+
+                    // 2. 如果發現有等待中的新版 (已下載完，等啟用)
+                    if (reg.waiting) {
+                        log('發現新版本等待中 (Waiting) -> 嘗試 skipWaiting');
+                        // 這裡通常 sw.js 裡的 self.skipWaiting() 會處理
+                        // 但我們也可以在前端通知它
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+
+                    // 3. 監聽是否有新版本出現
+                    reg.addEventListener('updatefound', () => {
+                        log('⚡ 發現新版本！開始下載...');
+                        newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            log('新版本狀態變更: ' + newWorker.state);
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                log('✨ 新版本下載完畢！');
+                                document.getElementById('status').innerText = '✨ 新版就緒！請按重整';
+                            }
+                        });
+                    });
+                })
+                .catch(err => log('❌ SW 註冊失敗: ' + err));
+
+            // 4. 監聽 Controller 改變 (代表真正更新了)
+            let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                console.log('Controller changed, reloading...');
-                window.location.reload();
+                if (refreshing) return;
+                refreshing = true;
+                log('🔄 Controller 已更新，準備重整...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000); // 延遲 1 秒讓您看清楚 Log
             });
         }
     </script>
