@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages 驗證測試</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f0f0; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .https-badge { background: #42b983; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>✅ 恭喜！頁面運作中</h1>
+        <p>這是您的第一個靜態測試頁面。</p>
+        <p>目前網址狀態：<span id="protocol-check">檢查中...</span></p>
+    </div>
+
+    <script>
+        // 簡單的 JS 測試，檢查是否為 HTTPS
+        const protocolSpan = document.getElementById('protocol-check');
+        if (window.location.protocol === 'https:') {
+            protocolSpan.innerHTML = '<span class="https-badge">安全 (HTTPS)</span> - PWA 準備就緒';
+        } else {
+            protocolSpan.textContent = '不安全 (' + window.location.protocol + ')';
+        }
+    </script>
+</body>
+</html>
