@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PWA 驗證測試</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/7b1fa2/ffffff.png?text=V4">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/009688/ffffff.png?text=V5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#7b1fa2">
+    <meta name="theme-color" content="#009688">
 
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             text-align: center;
             padding: 20px;
-            /* V1.0.0.4: 改成淺紫色 */
-            background-color: #f3e5f5; 
+            /* V1.0.0.5: 改成清爽的藍綠色 (Teal) */
+            background-color: #e0f2f1; 
             transition: background-color 0.5s;
         }
         .card {
@@ -28,19 +28,19 @@
             margin: 0 auto;
         }
         /* 標題顏色 */
-        h1 { color: #7b1fa2; margin-bottom: 5px; }
+        h1 { color: #009688; margin-bottom: 5px; }
         .version {
             font-size: 1.5em;
             font-weight: 800;
-            color: #4a148c;
-            border: 2px dashed #4a148c;
+            color: #00695c;
+            border: 2px dashed #00695c;
             padding: 10px 20px;
             margin: 15px 0;
             display: inline-block;
             border-radius: 8px;
         }
         .btn {
-            background: #8e24aa; /* 按鈕紫色 */
+            background: #26a69a; /* 按鈕藍綠色 */
             color: white;
             border: none;
             padding: 12px 24px;
@@ -54,7 +54,7 @@
         #debug-log {
             text-align: left;
             background: #333;
-            color: #e1bee7; /* Log 文字淡紫色 */
+            color: #80cbc4; /* Log 文字淺綠色 */
             padding: 10px;
             margin-top: 20px;
             border-radius: 5px;
@@ -68,11 +68,11 @@
     <div class="card">
         <h1>PWA 更新測試</h1>
         
-        <div class="version">Version: 1.0.0.4</div>
+        <div class="version">Version: 1.0.0.5</div>
         
-        <p>iOS PWA 專用測試介面</p>
+        <p>iOS PWA 自動更新驗證</p>
         
-        <button class="btn" onclick="checkUpdate()">檢查更新 (Update)</button>
+        <button class="btn" onclick="checkUpdate()">手動檢查 (Check)</button>
         <button class="btn" onclick="window.location.reload()">強制重整 (Reload)</button>
 
         <div id="status">SW 狀態: 初始化...</div>
@@ -94,54 +94,49 @@
             log('🚀 手動觸發檢查更新...');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
-                    // 標準檢查：會比對 GitHub 上的 sw.js 內容是否有變
                     reg.update().then(() => {
-                        log('📡 檢查請求已完成 (No Error)');
+                        log('📡 檢查請求已完成');
                     }).catch(err => {
                         log('❌ 檢查失敗: ' + err);
                     });
                 });
-            } else {
-                log('不支援 Service Worker');
             }
         }
 
         if ('serviceWorker' in navigator) {
-            // ↓↓↓ 修正：拿掉時間戳，改回標準寫法 ↓↓↓
+            // 正常的註冊方式 (沒有時間戳，驗證 Hot Reload 是否正常工作)
             navigator.serviceWorker.register('./sw.js')
                 .then(reg => {
-                    // 只要註冊沒報錯，就代表運作中
                     document.getElementById('status').innerText = '✅ PWA 運作中';
                     
-                    // 1. 如果頁面剛開，發現背後已經有安裝好的新版 (Waiting)
+                    // 1. 如果發現等待中的新版 (之前下載好但未啟動)
                     if (reg.waiting) {
-                        log('⏳ 發現等待中的新版，發送 skipWaiting...');
+                        log('⏳ 發現等待中的新版，自動觸發更新...');
                         reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                     }
 
-                    // 2. 監聽是否發現新版本 (GitHub 上有更新時會觸發)
+                    // 2. 監聽是否發現新版本 (背景自動偵測到)
                     reg.addEventListener('updatefound', () => {
-                        log('⚡ 發現新版本！開始下載...');
+                        log('⚡ 發現新版本！開始背景下載...');
                         newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
-                            log('📦 新版本狀態: ' + newWorker.state);
+                            log('📦 下載狀態: ' + newWorker.state);
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                log('✨ 下載完畢！新版準備就緒');
+                                log('✨ 下載完畢！準備切換版本');
                             }
                         });
                     });
                 })
                 .catch(err => {
                     log('❌ SW 註冊失敗: ' + err);
-                    document.getElementById('status').innerText = '❌ 註冊失敗';
                 });
 
-            // 3. 監聽版本切換 (更新成功後的自動重整)
+            // 3. 監聽版本切換 (最關鍵的一步：自動重整)
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
                 refreshing = true;
-                log('🔄 版本已切換，3秒後重整...');
+                log('🔄 偵測到新版已接手，3秒後自動重整頁面...');
                 setTimeout(() => {
                     window.location.reload();
                 }, 3000);
