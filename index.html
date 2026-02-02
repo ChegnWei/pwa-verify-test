@@ -3,28 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Pages 驗證測試</title>
+    <title>PWA 驗證測試</title>
+    <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f0f0; }
-        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; }
-        .https-badge { background: #42b983; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;}
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+            /* V1 版本：背景是淺藍色 */
+            background-color: #e3f2fd; 
+            transition: background-color 0.5s;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        h1 { color: #1565c0; } /* 藍色文字 */
+        .version {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #d32f2f;
+            border: 2px dashed #d32f2f;
+            padding: 10px;
+            margin: 20px 0;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>✅ 恭喜！頁面運作中</h1>
-        <p>這是您的第一個靜態測試頁面。</p>
-        <p>目前網址狀態：<span id="protocol-check">檢查中...</span></p>
+    <div class="card">
+        <h1>PWA 更新測試</h1>
+        <p>當前版本狀態：</p>
+        
+        <div class="version">Version: 1.0.0.0</div>
+        
+        <p>請將此頁面加入主畫面 (Install)</p>
+        <p id="status">Service Worker 載入中...</p>
     </div>
 
     <script>
-        // 簡單的 JS 測試，檢查是否為 HTTPS
-        const protocolSpan = document.getElementById('protocol-check');
-        if (window.location.protocol === 'https:') {
-            protocolSpan.innerHTML = '<span class="https-badge">安全 (HTTPS)</span> - PWA 準備就緒';
-        } else {
-            protocolSpan.textContent = '不安全 (' + window.location.protocol + ')';
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    document.getElementById('status').innerText = '✅ PWA 功能已就緒 (SW Registered)';
+                    console.log('SW registered:', reg);
+                    
+                    // 偵測是否有新版本在等待
+                    if(reg.waiting) {
+                        // 這裡通常會跳出提示請使用者重新整理，我們簡化測試直接 log
+                        console.log('新版本已下載，等待啟動');
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('status').innerText = '❌ PWA 註冊失敗';
+                    console.error('SW error:', err);
+                });
+
+            // 監聽 Controller 改變 (代表更新完成了)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('Controller changed, reloading...');
+                window.location.reload();
+            });
         }
     </script>
 </body>
