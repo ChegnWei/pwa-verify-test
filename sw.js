@@ -1,6 +1,6 @@
 // --- 設定區 ---
-// ↓↓↓ 版本號改成 1.0.0.4 ↓↓↓
-const CACHE_NAME = 'pwa-ver-1.0.0.4';
+// ↓↓↓ 關鍵修改：版本號改成 1.0.0.5 ↓↓↓
+const CACHE_NAME = 'pwa-ver-1.0.0.5';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
 // 安裝階段
 self.addEventListener('install', (event) => {
     console.log('[SW] 安裝新版:', CACHE_NAME);
+    // 讓新版直接進入 Waiting 狀態，不用等舊版關閉
     self.skipWaiting(); 
     
     event.waitUntil(
@@ -23,6 +24,7 @@ self.addEventListener('install', (event) => {
 // 啟動階段
 self.addEventListener('activate', (event) => {
     console.log('[SW] 新版啟動，清除舊快取');
+    // 讓新版 SW 立即接管頁面
     event.waitUntil(clients.claim());
 
     event.waitUntil(
