@@ -107,7 +107,8 @@
         }
 
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
+            // 加上 ?t=時間，強迫網址看起來不一樣，騙過快取機制
+            navigator.serviceWorker.register('./sw.js?t=' + new Date().getTime())
                 .then(reg => {
                     log('✅ SW 註冊成功 (目前版本)');
                     document.getElementById('status').innerText = '✅ PWA 運作中';
