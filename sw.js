@@ -1,6 +1,6 @@
 // --- 設定區 ---
 // 每次要版更時，請務必修改這裡的 CACHE_NAME
-const CACHE_NAME = 'pwa-ver-1.0.0.0';
+const CACHE_NAME = 'pwa-ver-1.0.0.1';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
