@@ -1,6 +1,6 @@
 // --- 設定區 ---
-// ↓↓↓ 關鍵修改：版本號改成 1.0.0.2 ↓↓↓
-const CACHE_NAME = 'pwa-ver-1.0.0.2';
+// ↓↓↓ 關鍵修改：版本號改成 1.0.0.3 ↓↓↓
+const CACHE_NAME = 'pwa-ver-1.0.0.3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
