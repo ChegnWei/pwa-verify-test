@@ -1,147 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PWA 驗證測試</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/009688/ffffff.png?text=V5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#009688">
+  <meta charset="UTF-8">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="msapplication-navbutton-color" content="#304FFE">
+  <meta name="description" content="工研院外租用車行車記錄系統,移動載送任務系統 PWA 應用程式">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="msapplication-TileColor" content="#304FFE">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DispatchCarApp">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>工研院外租用車行車記錄系統</title>
+  <script type="module" crossorigin src="/assets/index-B696HkVG.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vue-CUNbW9vV.js">
+  <link rel="modulepreload" crossorigin href="/assets/pinia-dVVQ345N.js">
+  <link rel="modulepreload" crossorigin href="/assets/axios-pMlYcaaZ.js">
+  <link rel="modulepreload" crossorigin href="/assets/cryptoJs-BPnrrIzj.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-D73pkFfF.css">
+<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            text-align: center;
-            padding: 20px;
-            /* V1.0.0.5: 改成清爽的藍綠色 (Teal) */
-            background-color: #e0f2f1; 
-            transition: background-color 0.5s;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        /* 標題顏色 */
-        h1 { color: #009688; margin-bottom: 5px; }
-        .version {
-            font-size: 1.5em;
-            font-weight: 800;
-            color: #00695c;
-            border: 2px dashed #00695c;
-            padding: 10px 20px;
-            margin: 15px 0;
-            display: inline-block;
-            border-radius: 8px;
-        }
-        .btn {
-            background: #26a69a; /* 按鈕藍綠色 */
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 50px;
-            margin: 10px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .btn:active { transform: scale(0.95); }
-        #debug-log {
-            text-align: left;
-            background: #333;
-            color: #80cbc4; /* Log 文字淺綠色 */
-            padding: 10px;
-            margin-top: 20px;
-            border-radius: 5px;
-            font-size: 12px;
-            height: 150px;
-            overflow-y: scroll;
-        }
-    </style>
-</head>
 <body>
-    <div class="card">
-        <h1>PWA 更新測試</h1>
-        
-        <div class="version">Version: 1.0.0.5</div>
-        
-        <p>iOS PWA 自動更新驗證</p>
-        
-        <button class="btn" onclick="checkUpdate()">手動檢查 (Check)</button>
-        <button class="btn" onclick="window.location.reload()">強制重整 (Reload)</button>
-
-        <div id="status">SW 狀態: 初始化...</div>
-    </div>
-
-    <div id="debug-log">Log 初始化...</div>
-
-    <script>
-        function log(msg) {
-            const box = document.getElementById('debug-log');
-            const time = new Date().toLocaleTimeString();
-            box.innerHTML = `[${time}] ${msg}<br>` + box.innerHTML;
-            console.log(msg);
-        }
-
-        let newWorker;
-
-        function checkUpdate() {
-            log('🚀 手動觸發檢查更新...');
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(reg => {
-                    reg.update().then(() => {
-                        log('📡 檢查請求已完成');
-                    }).catch(err => {
-                        log('❌ 檢查失敗: ' + err);
-                    });
-                });
-            }
-        }
-
-        if ('serviceWorker' in navigator) {
-            // 正常的註冊方式 (沒有時間戳，驗證 Hot Reload 是否正常工作)
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => {
-                    document.getElementById('status').innerText = '✅ PWA 運作中';
-                    
-                    // 1. 如果發現等待中的新版 (之前下載好但未啟動)
-                    if (reg.waiting) {
-                        log('⏳ 發現等待中的新版，自動觸發更新...');
-                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    }
-
-                    // 2. 監聽是否發現新版本 (背景自動偵測到)
-                    reg.addEventListener('updatefound', () => {
-                        log('⚡ 發現新版本！開始背景下載...');
-                        newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            log('📦 下載狀態: ' + newWorker.state);
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                log('✨ 下載完畢！準備切換版本');
-                            }
-                        });
-                    });
-                })
-                .catch(err => {
-                    log('❌ SW 註冊失敗: ' + err);
-                });
-
-            // 3. 監聽版本切換 (最關鍵的一步：自動重整)
-            let refreshing = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (refreshing) return;
-                refreshing = true;
-                log('🔄 偵測到新版已接手，3秒後自動重整頁面...');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
-            });
-        }
-    </script>
+  <div id="app"></div>
 </body>
+
 </html>
